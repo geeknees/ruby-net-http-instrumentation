@@ -45,11 +45,25 @@ module Net
 
                 res = request_original(req, body, &block)
               else
+                if req.uri
+                  url = req.uri.to_s 
+                else
+                  if @address
+                    uri = URI(@address)
+                    if uri.relative?
+                      url = @address + req.path
+                    else
+                      url = (uri + req.path).to_s
+                    end
+                  else
+                    url = req.path
+                  end
+                end
                 tags = {
                   "component" => "Net::HTTP",
                   "span.kind" => "client",
                   "http.method" => req.method,
-                  "http.url" => req.path,
+                  "http.url" => url,
                   "peer.host" => @address,
                   "peer.port" => @port,
                 }
