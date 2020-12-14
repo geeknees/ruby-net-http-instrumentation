@@ -21,10 +21,12 @@ RSpec.describe Net::Http::Instrumentation do
       end
 
       it "adds spans for GET using a direct method" do
-        stub_request(:any, "www.example.com")
-        Net::HTTP.get("www.example.com", "/")
+        stub_request(:any, "www.example.com/path?q=123")
+        Net::HTTP.get("www.example.com", "/path?q=123")
 
         expect(OpenTracing.global_tracer.spans.count).to be > 0
+        expect(OpenTracing.global_tracer.spans.first.tags).to have_key('http.url')
+        expect(OpenTracing.global_tracer.spans.first.tags['http.url']).to eql('www.example.com/path?q=123')
       end
 
       it "adds spans for POST with URI" do
@@ -33,6 +35,8 @@ RSpec.describe Net::Http::Instrumentation do
         Net::HTTP.post_form(uri, 'q' => 'test')
 
         expect(OpenTracing.global_tracer.spans.count).to be > 0
+        expect(OpenTracing.global_tracer.spans.first.tags).to have_key('http.url')
+        expect(OpenTracing.global_tracer.spans.first.tags['http.url']).to eql('http://www.example.com/')
       end
 
       it "adds spans for PUT in block style" do
